@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "Google Cloud Platform (GCP) Project ID."
   type        = string
-  default     = "cicd-task"
+  default     = "lithe-cocoa-337808"
 }
 
 variable "project_name" {
@@ -33,13 +33,6 @@ variable "gcp_service_list" {
   ]
 } */
 
-
-variable "network_name" {
-  description = "Network to use"
-  type        = string
-  default     = "default"
-}
-
 variable "name_test" {
   description = "Instance test name."
   type        = string
@@ -62,4 +55,19 @@ variable "image" {
   description = "GCP VM instance image."
   type        = string
   default     = "ubuntu-os-cloud/ubuntu-1804-lts"
+}
+
+variable "machine_type_autoscaler" {
+  type        = string
+  default     = "f1-micro"
+}
+
+variable "name_autoscaler" {
+  type        = string
+  default     = "autoscaler"
+}
+
+variable "region_autoscaler" {
+  type        = string
+  default     = "europe-central2"
 }

@@ -5,6 +5,25 @@ provider "google" {
 }
 
 
+provider "google-beta" {
+  region      = var.region
+  zone        = var.zone
+}
+
+module "firewall-rule"{
+  source  = "./modules/firewall-rule"
+}
+
+
+module "network"{
+  source  = "./modules/network"
+  project_id   = var.project_id
+  network_name = "${var.name_autoscaler}-network"
+  subnet_name  = "${var.name_autoscaler}-subnet"
+  region       = var.region_autoscaler
+}
+
+
 /* resource "google_project_service" "gcp_services" {
 
   project   = var.project_id
@@ -29,7 +48,7 @@ resource "random_id" "login"{
 
 
 data "template_file" "script-test" {
-  template = file("/home/omors/Documents/-study/gcp-terraform-cicd/scripts/startup-script-test.sh")
+  template = file("./scripts/startup-script-test.sh")
   vars = {
     login             = random_id.login.id,
     password          = random_password.password.result
@@ -51,18 +70,18 @@ resource "google_compute_instance" "jenkins-test" {
   }
 
   network_interface {
-    network = var.network_name
+    subnetwork = module.network.subnetwork_name
 
     access_config {
       // Ephemeral IP
     }
-    
   }
+  depends_on = [module.network]
 }
 
 
 data "template_file" "script-prod" {
-  template = file("/home/omors/Documents/-study/gcp-terraform-cicd/scripts/startup-script-prod.sh")
+  template = file("./scripts/startup-script-prod.sh")
   vars = {
     login                   = random_id.login.id,
     password                = random_password.password.result
@@ -75,7 +94,7 @@ resource "google_compute_instance" "jenkins-prod" {
   zone         = var.zone
   name         = var.name_prod
   machine_type = var.machine_type
-
+  tags         = ["prod"]
   metadata_startup_script = data.template_file.script-prod.rendered
 
   boot_disk {
@@ -85,16 +104,59 @@ resource "google_compute_instance" "jenkins-prod" {
   }
 
   network_interface {
-    network = var.network_name
-
-    access_config {
-      // Ephemeral IP
-    }
-   
+    subnetwork = module.network.subnetwork_name
+    access_config {}
   }
+
+  depends_on = [module.network]
 }
 
 
-module "firewall-rule"{
-  source  = "../gcp-terraform-cicd/modules/firewall-rule"
+resource "google_compute_autoscaler" "autoscaler" {
+  name   = var.name_autoscaler
+  zone   = var.zone
+  target = google_compute_instance_group_manager.autoscaler-igm.id
+
+  autoscaling_policy {
+    max_replicas    = 3
+    min_replicas    = 1
+    cooldown_period = 60
+
+    cpu_utilization {
+      target = 0.5
+    }
+  }
+  depends_on = [module.network]
+}
+
+resource "google_compute_instance_template" "autoscaler-instance" {
+  project        = var.project_id
+  name           = "${var.name_autoscaler}-instance"
+  machine_type   = var.machine_type_autoscaler
+  region         = var.region_autoscaler
+  can_ip_forward = false
+
+  tags = ["prod"]
+
+  disk {
+    source_image = var.image
+  }
+  
+  network_interface {
+    subnetwork = module.network.subnetwork_name
+    access_config {}
+  }
+  depends_on = [module.network]
+}
+
+resource "google_compute_instance_group_manager" "autoscaler-igm" {
+  project            = var.project_id
+  name               = "${var.name_autoscaler}-igm"
+  base_instance_name = var.name_autoscaler
+
+  version {
+    instance_template = google_compute_instance_template.autoscaler-instance.id
+    name              = "primary"
+  }
+  zone = var.zone
 }
