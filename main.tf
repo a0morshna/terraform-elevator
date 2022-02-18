@@ -5,13 +5,12 @@ provider "google" {
 }
 
 
-provider "google-beta" {
-  region      = var.region
-  zone        = var.zone
-}
-
 module "firewall-rule"{
-  source  = "./modules/firewall-rule"
+  source         = "./modules/firewall-rule"
+  firewall_name  = var.firewall_name
+  network_name   = var.network_name
+  firewall_ports = var.firewall_ports
+  protocol_name  = var.protocol_name
 }
 
 
@@ -129,6 +128,7 @@ resource "google_compute_autoscaler" "autoscaler" {
   depends_on = [module.network]
 }
 
+
 resource "google_compute_instance_template" "autoscaler-instance" {
   project        = var.project_id
   name           = "${var.name_autoscaler}-instance"
@@ -148,6 +148,7 @@ resource "google_compute_instance_template" "autoscaler-instance" {
   }
   depends_on = [module.network]
 }
+
 
 resource "google_compute_instance_group_manager" "autoscaler-igm" {
   project            = var.project_id

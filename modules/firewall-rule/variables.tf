@@ -1,17 +1,7 @@
-variable "firewall_name" {
-  description = "Firewall module name."
-  type        = string
-  default     = "allow-http"
-}
+variable "firewall_name" {}
 
-variable "network_name" {
-  description = "Network to use."
-  type        = string
-  default     = "default"
-}
+variable "network_name" {}
 
-variable "protocol_name" {
-  description = "Name for protocol."
-  type        = string
-  default     = "tcp"
-}
+variable "protocol_name" {}
+
+variable "firewall_ports" {}

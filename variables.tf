@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "Google Cloud Platform (GCP) Project ID."
   type        = string
-  default     = "lithe-cocoa-337808"
+  default     = "sixth-zoo-337808"
 }
 
 variable "project_name" {
@@ -21,7 +21,6 @@ variable "zone" {
   type        = string
   default     = "europe-central2-a"
 }
-
 
 /* 
 variable "gcp_service_list" {
@@ -70,4 +69,24 @@ variable "name_autoscaler" {
 variable "region_autoscaler" {
   type        = string
   default     = "europe-central2"
+}
+
+variable "firewall_name" {
+  type        = string
+  default     = "allow-http"
+}
+
+variable "network_name" {
+  type        = string
+  default     = "default"
+}
+
+variable "protocol_name" {
+  type        = string
+  default     = "tcp"
+}
+
+variable "firewall_ports" {
+  type    = list
+  default = ["22","8080"]
 }
